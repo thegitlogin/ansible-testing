@@ -1,0 +1,3 @@
+vault_keysfile: ".hashicorp_vault_keys.json"
+vault_port: 8200
+vault_addr: 127.0.0.1

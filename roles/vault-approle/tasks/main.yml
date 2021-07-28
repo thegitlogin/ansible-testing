@@ -1,0 +1,107 @@
+---
+- name: Get root token
+  become: true
+  become_user: ubuntu
+  slurp:
+    src: "~/{{ vault_keysfile }}"
+  register: token_file
+  no_log: true
+
+- name: get json data
+  set_fact:
+    json_data: "{{ token_file['content'] | b64decode }}"
+
+- name: save root token variable
+  set_fact:
+    root_token: "{{ json_data.root_token }}"
+
+- name: Vault heath check
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_code:
+    - 473
+    - 200
+  retries: 10
+  delay: 5
+
+- name: get status of approle auth method
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+  failed_when:
+    - no
+  register: vault_status_approle_auth_method
+
+- name: enable approle auth method
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/auth/approle"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body:
+      type: "{{ approle_path }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  when:
+   - "'{{ approle_path }}/' not in vault_status_approle_auth_method.json.data"
+
+- name: Create Approle Client policy
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/policies/acl/{{ approle_policy }}"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('file','approle_policies.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: Create role 'transform' and apply approle_policy policy
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/auth/approle/role/{{ approle_name }}"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('template','transform_policy.json.j2') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: Get Role-id from Vault
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/auth/approle/role/{{ approle_name }}/role-id"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  register: role_id
+
+- name: Get Secret ID
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/auth/approle/role/{{ approle_name }}/secret-id"
+    method: PUT
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('template','roleid_json.j2') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  register: secret_id
+
+- name: Merge variables and copy to a file
+  become: no
+  copy:
+    content: "{{ role_id.json.data | combine(secret_id.json.data) }}"
+    dest: "~/{{ approle_secretsfile }}"

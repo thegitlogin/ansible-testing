@@ -3,8 +3,8 @@ listener "tcp" {
   cluster_address  = "0.0.0.0:{{ vault_cluster_port }}"
 }
 
-api_addr = "https://{{ ansible_fqdn }}:{{ vault_port }}"
-cluster_addr = "https://{{ ansible_fqdn }}:{{ vault_cluster_port }}"
+api_addr = "http://{{ vault_addr }}:{{ vault_port }}"
+cluster_addr = "http://{{ vault_addr }}:{{ vault_cluster_port }}"
 
 seal "awskms" {
   region     = "{{ vault_region }}"

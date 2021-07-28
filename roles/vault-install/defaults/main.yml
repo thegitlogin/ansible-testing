@@ -3,7 +3,7 @@ vault_bin_path: "/usr/local/bin"
 vault_bin: "/usr/local/bin/vault"
 vault_conf: "/etc/vault.d/vault.hcl"
 vault_log: "/var/log/vault/vault.log"
-tls_disable: 0
+tls_disable: 1
 service_name: "vault"
 vault_port: 8200
 vault_cluster_port: 8201
@@ -15,3 +15,5 @@ vault_service: "vault"
 vault_raft_path: "/opt/vault/"
 vault_profile: "/etc/profile.d/vault.sh"
 vault_path: "/etc/vault.d/"
+vault_zip_url: "https://releases.hashicorp.com/vault/1.7.1+ent/vault_1.7.1+ent_linux_amd64.zip"
+vault_addr: "127.0.0.1"

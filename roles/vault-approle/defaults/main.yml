@@ -1,0 +1,7 @@
+vault_keysfile: ".hashicorp_vault_keys.json"
+vault_port: 8200
+approle_policy: transform_approle_policy
+approle_name: role_transform
+approle_secretsfile: .role_id_secret_id
+approle_path: approle
+vault_addr: 127.0.0.1

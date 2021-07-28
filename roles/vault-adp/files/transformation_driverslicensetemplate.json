@@ -1,0 +1,5 @@
+{
+    "type": "regex",
+    "pattern": "(\\w{6,17})",
+    "alphabet": "builtin/alphanumericupper"
+}

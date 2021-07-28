@@ -1,0 +1,3 @@
+{
+  "policy": "#TODO this policy is for testing, need to be updated after adp to have access the right paths 'adp'\npath \"transform/fpe/*\" {\n  capabilities = [ \"read\", \"list\" ]\n}"
+}

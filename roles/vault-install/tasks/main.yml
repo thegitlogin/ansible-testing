@@ -1,17 +1,9 @@
 ---
-- name: Setup autocompletion
-  copy:
-    content: complete -C "{{ vault_bin }}" "vault"
-    dest: "/etc/profile.d/99-vault-completion.sh"
-    mode: 0644
-
-- name: Download vault from s3 bucket
-  s3:
-    bucket: "{{ s3_bucket }}"
-    object: "installers/vault_{{ vault_version }}_linux_amd64.zip"
+- name: Download Vault
+  get_url:
+    url: "{{ vault_zip_url }}"
     dest: "{{ vault_zip_path }}"
-    mode: get
-    overwrite: no
+  tags: installation
 
 - name: Extract vault
   ansible.builtin.unarchive:
@@ -50,17 +42,6 @@
     group: "{{ vault_group }}"
     path: "{{ vault_conf }}"
 
-#Todo test
-#- name: Simple PUT operation
-#  amazon.aws.aws_s3:
-#    bucket: "{{ s3_bucket }}"
-#    object: "{{ item }} "
-#    dest:  "{{ vault_certs }}"
-#    mode: get
-#  with_items:
-#    - "{{ vault_cert_s3_crt }}"
-#    - "{{ vault_cert_s3_key }}"
-
 - name: Create vault server configuration
   template:
     src: vault.hcl.j2
@@ -93,22 +74,7 @@
     group: root
     mode: 0755
 
-#Add to clean-up
-#  - name: Clean Up
-#    file:
-#      state: absent
-#      path: "{{ item }}"
-#    with_items:
-#      - "{{ vault_zip_path }}"
-
 - name: Start vault systemd service
   systemd:
     name: "vault.service"
     state: started
-
-
-- aws_kms_facts:
-  args:
-    alias: "alias/ec2kms"
-    filters:
-      "tag:Name": ec2kms

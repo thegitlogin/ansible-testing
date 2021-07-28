@@ -1,0 +1,3 @@
+{
+    "policy": "# Manage transform\npath \"sys/mounts/*\" {\n   capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\", \"sudo\"]\n}\n"
+}

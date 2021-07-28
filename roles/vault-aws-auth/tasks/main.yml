@@ -1,0 +1,54 @@
+---
+- name: Get root token
+  become: true
+  become_user: ubuntu
+  slurp:
+    src: "~/{{ vault_keysfile }}"
+  register: token_file
+  no_log: true
+
+- name: get json data
+  set_fact:
+    json_data: "{{ token_file['content'] | b64decode }}"
+
+- name: save root token variable
+  set_fact:
+    root_token: "{{ json_data.root_token }}"
+
+- name: Vault heath check
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_code:
+    - 473
+    - 200
+  retries: 10
+  delay: 5
+
+- name: get status of AWS auth method
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/auth"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    #  X-Vault-Namespace: "{{ vault_namespace | default(omit) }}"
+  failed_when:
+    - no
+  register: vault_status_aws_auth_method
+
+- name: enable AWS auth method
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/auth/aws"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    #  X-Vault-Namespace: "{{ vault_namespace | default(omit) }}"
+    body:
+      type: aws
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  when:
+   - "'aws/' not in vault_status_aws_auth_method.json.data"

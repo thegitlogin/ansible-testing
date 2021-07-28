@@ -1,0 +1,39 @@
+---
+- name: Get root token
+  become: true
+  become_user: ubuntu
+  slurp:
+    src: "~/{{ vault_keysfile }}"
+  register: token_file
+  no_log: true
+
+- name: get json data
+  set_fact:
+    json_data: "{{ token_file['content'] | b64decode }}"
+
+- name: save root token variable
+  set_fact:
+    root_token: "{{ json_data.root_token }}"
+
+- name: Vault heath check
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_code:
+    - 473
+    - 200
+  retries: 10
+  delay: 5
+
+- name: snapshot agent
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/storage/raft/snapshot-auto/config/local-backup"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('template','backup-config.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204

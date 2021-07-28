@@ -1,0 +1,5 @@
+vault_keysfile: ".hashicorp_vault_keys.json"
+vault_port: 8200
+vault_user: "vault"
+vault_group: "vault"
+vault_audit_log: "/opt/vault/audit/"

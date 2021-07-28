@@ -1,0 +1,113 @@
+---
+- name: Get root token
+  become: true
+  become_user: ubuntu
+  slurp:
+    src: "~/{{ vault_keysfile }}"
+  register: token_file
+  no_log: true
+
+- name: get json data
+  set_fact:
+    json_data: "{{ token_file['content'] | b64decode }}"
+
+- name: save root token variable
+  set_fact:
+    root_token: "{{ json_data.root_token }}"
+
+- name: Vault heath check
+  uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_code:
+    - 473
+    - 200
+  retries: 10
+  delay: 5
+
+- name: get status of transform secrets engine
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/mounts"
+    method: GET
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+  failed_when:
+    - no
+  register: vault_status_transform
+
+- name: enable transform secrets engine
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/mounts/transform"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body:
+      type: "{{ transform_path }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+  when:
+    - "'{{ transform_path }}/' not in vault_status_transform.json.data"
+
+- name: create transform secrets engine role
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/transform/role/encryption"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('template','transform_roles.json.j2') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: create transformation creditcardnumber
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/transform/transformation/fpe/creditcardnumber"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('file','transform_creditcard.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: create transformation socialsecuritynumber
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/transform/transformation/fpe/socialsecuritynumber"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('file','transformation_socialsecurity.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: create driverslicense template
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/transform/template/driverslicense-template"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('file','transformation_driverslicense_template.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+
+- name: create transformation driverslicense
+  ansible.builtin.uri:
+    url: "http://{{ vault_addr }}:{{ vault_port }}/v1/transform/transformation/fpe/driverslicense"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+    body: "{{ lookup('file','transformation_driverslicense.json') }}"
+    body_format: json
+    status_code:
+      - 200
+      - 204
+

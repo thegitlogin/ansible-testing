@@ -1,0 +1,67 @@
+- name: Include vars of into the 'extra' variable.
+  include_vars:
+    file: /tmp/ansible/roles/ansible-role-vault-install/defaults/main.yml
+    name: extra
+
+- name: Save the keys to s3
+  command: "aws s3 cp s3://{{ extra.s3_bucket }}/{{ extra.s3_keys_folder }}/{{ vault_keysfile }} ~/{{ vault_keysfile }}"
+  become: no
+
+- name: Get root token
+  become: true
+  become_user: ubuntu
+  slurp:
+    src: "~/{{ vault_keysfile }}"
+  register: token_file
+  no_log: true
+
+- name: Delete file
+  file:
+    state: absent
+    path: "~/{{ vault_keysfile }}"
+  become: no
+  no_log: no
+
+- name: get json data
+  set_fact:
+    json_data: "{{ token_file['content'] | b64decode }}"
+
+- name: save root token variable
+  set_fact:
+    root_token: "{{ json_data.root_token }}"
+
+- name: Getting custom CN
+  shell: "openssl x509 -noout -subject -in {{ extra.vault_tls_path }}/{{ extra.cert_name }}.pem | grep -oP '(?<=CN = ).*'"
+  register: custom_cn
+
+- name: Vault heath check
+  uri:
+    url: "https://{{ custom_cn.stdout }}:{{ vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_code: 473
+  retries: 10
+  delay: 5
+
+- name: get list of namespaces
+  ansible.builtin.uri:
+    url: "https://{{ custom_cn.stdout }}:{{ vault_port }}/v1/sys/namespaces"
+    method: LIST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+  failed_when:
+    - no
+  register: vault_status_namespaces
+  environment:
+    SSL_CERT_FILE: "{{ extra.vault_tls_path }}/{{ extra.cert_name }}.pem"
+
+- name: Enable namespace
+  uri:
+    url: "https://{{ custom_cn.stdout }}:{{ vault_port }}/v1/sys/namespaces/{{ extra.namespace }}"
+    method: POST
+    headers:
+      X-Vault-Token: "{{ root_token }}"
+  when:
+    - "extra.namespace + '/' not in vault_status_namespaces.json.data.key_info"
+  environment:
+    SSL_CERT_FILE: "{{ extra.vault_tls_path }}/{{ extra.cert_name }}.pem"

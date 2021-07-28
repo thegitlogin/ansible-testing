@@ -1,0 +1,7 @@
+vault_keysfile: ".hashicorp_vault_keys.json"
+vault_port: 8200
+transform_path: transform
+approle_transf1: creditcardnumber
+approle_transf2: socialsecuritynumber
+approle_transf3: driverslicense
+vault_addr: 127.0.0.1

@@ -1,0 +1,5 @@
+{
+    "template": "builtin/socialsecuritynumber",
+    "tweak_source": "internal",
+    "allowed_roles": "encryption"
+}

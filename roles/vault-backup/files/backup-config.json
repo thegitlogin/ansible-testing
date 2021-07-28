@@ -1,0 +1,8 @@
+{
+    "name": "backup",
+    "interval": "15m",
+    "retain": 1,
+    "path_prefix": "/opt/vault/snapshots/",
+    "file_prefix": "vault-snapshot",
+    "storage_type": "local"
+}

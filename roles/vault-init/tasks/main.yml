@@ -1,6 +1,14 @@
 ---
 # tasks file for ansible-role-vault-init
-
+- name: Vault health check 501
+  uri:
+    url: "http://{{ vault_addr }}:{{vault_port }}/v1/sys/health"
+    validate_certs: no
+    method: GET
+    status_Code: 501
+  retries: 10
+  delay: 5
+    
 - name: Initialise vault
   uri:
     url: "http://{{ vault_addr }}:{{ vault_port }}/v1/sys/init"
@@ -9,7 +17,8 @@
     body: "{{ lookup('file','init_params.json') }}"
     body_format: json
     return_content: yes
-    status_code: 200
+    status_code: 
+    - 200
   become: no
   register: vault_init
   run_once: yes

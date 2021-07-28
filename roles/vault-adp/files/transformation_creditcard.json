@@ -1,0 +1,5 @@
+{
+    "template": "builtin/creditcardnumber",
+    "tweak_source": "internal",
+    "allowed_roles": "encryption"
+}

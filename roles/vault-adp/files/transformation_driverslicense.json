@@ -1,0 +1,5 @@
+{
+    "template": "driverslicense-template",
+    "tweak_source": "internal",
+    "allowed_roles": "encryption"
+}

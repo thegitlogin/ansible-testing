@@ -1,0 +1,11 @@
+{
+    "name": "s3-backup",
+    "interval": "15m",
+    "retain": "1344",
+    "path_prefix": "/backup/snapshots/",
+    "file_prefix": "vault-snapshot-{{ extra.vault_region }}",
+    "storage_type": "aws-s3",
+    "aws_s3_bucket": "{{ extra.s3_backup }}",
+    "aws_s3_region": "{{ extra.vault_region }}",
+    "aws_s3_force_path_style": true
+}
