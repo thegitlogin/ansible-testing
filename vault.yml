@@ -14,8 +14,9 @@
     - name: Approle
       role: vault-approle
       
-    - name: Namespaces
-      role: vault-namespaces
+#    - name: Namespaces
+#      role: vault-namespaces
 
     - name: AWS auth
       role: vault-aws-auth     
+      
