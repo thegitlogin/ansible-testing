@@ -33,8 +33,7 @@
   with_items:
     - "{{ vault_raft_path }}"
     - "{{ vault_path }}"
-    - "{{ vault_tls_path }}"
-
+    
 - name: Create conf
   file:
     state: touch
