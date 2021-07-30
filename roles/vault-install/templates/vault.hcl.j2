@@ -14,11 +14,5 @@ disable_mlock = true
 storage "raft" {
   path = "{{ vault_raft_path }}"
   node_id = "raft_{{ ansible_facts['nodename'] }}"
-
-  retry_join {
-  {% if cloud_env == "aws" -%}
-    auto_join = "provider=aws tag_key={{ vault_join_tag_key }} tag_value={{ vault_join_tag_value }} region={{ vault_region }} addr_type=private_v4"
-    auto_join_scheme = "http"
-  {% endif -%}
-  }
+}
 ui = true
