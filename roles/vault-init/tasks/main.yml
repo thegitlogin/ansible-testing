@@ -5,7 +5,7 @@
     url: "http://{{ vault_addr }}:{{vault_port }}/v1/sys/health"
     validate_certs: no
     method: GET
-    status_Code: 501
+    status_code: 501
   retries: 10
   delay: 5
     
