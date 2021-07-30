@@ -3,7 +3,7 @@ vault_bin_path: "/usr/local/bin"
 vault_bin: "/usr/local/bin/vault"
 vault_conf: "/etc/vault.d/vault.hcl"
 vault_log: "/var/log/vault/vault.log"
-tls_disable: 1
+tls_disable: true
 service_name: "vault"
 vault_port: 8200
 vault_cluster_port: 8201
