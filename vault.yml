@@ -3,7 +3,19 @@
 
   roles:
     - name: Install Vault
-      role: ansible-role-vault-install
+      role: vault-install
 
     - name: Init Vault
-      role: ansible-role-vault-init
+      role: vault-init
+      
+    - name: Audit
+      role: vault-audit
+
+    - name: Approle
+      role: vault-approle
+      
+    - name: Namespaces
+      role: vault-namespaces
+
+    - name: AWS auth
+      role: vault-aws-auth     
